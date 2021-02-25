@@ -32,8 +32,7 @@ class Anemometer:
             for reading in self.readings:
                 if reading is not None and reading < min_reading:
                     min_reading = reading
-                    if  min_reading:
-        if min_reading:
+        if min_reading > 0:
             return self.circumference / min_reading
         return None
 
@@ -45,7 +44,7 @@ class Anemometer:
             for reading in self.readings:
                 if reading is not None and reading > max_reading:
                     max_reading = reading
-        if max_reading:
+        if max_reading > 0:
             return self.circumference / max_reading
         return None
 
@@ -60,7 +59,7 @@ class Anemometer:
                     total += reading
                     count += 1.0
         avg = total / count
-        if avg:
+        if avg > 0:
             return self.circumference / avg
         return None
 

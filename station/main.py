@@ -33,7 +33,8 @@ if __name__ == "__main__":
     I2C_INSTANCE = I2C(board.SCL, board.SDA)
     BME680 = adafruit_bme680.Adafruit_BME680_I2C(I2C_INSTANCE, debug=False)
 
+    time.sleep(10)
     while True:
-        time.sleep(consts.SLEEP_TIME)
         take_reading()
+        time.sleep(consts.SLEEP_TIME)
         ANEMOMETER.reset()
