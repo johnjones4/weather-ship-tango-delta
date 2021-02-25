@@ -133,3 +133,7 @@ opensans-master
 config.yml
 
 dashboard.bmp
+data
+.env
+.vscode
+__pycache__

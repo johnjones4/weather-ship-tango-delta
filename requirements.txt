@@ -1,8 +1,0 @@
-Pillow
-requests
-exchangelib
-pytz
-pyyaml
-feedparser
-python-dateutil
-icalendar

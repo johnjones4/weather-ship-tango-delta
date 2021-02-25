@@ -1,0 +1,5 @@
+adafruit-circuitpython-bme680
+RPI.GPIO
+adafruit-blinka
+requests
+python-dotenv
