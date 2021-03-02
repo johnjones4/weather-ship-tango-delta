@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import psycopg2
-import consts
+import app.consts as consts
 from datetime import datetime, timedelta
 from threading import Lock
 
@@ -78,11 +78,13 @@ def get_average():
     if "range" not in request.args:
         raise Exception("range parameter required")
     drange = timedelta(minutes=int(request.args.get("range")))
-    now = datetime.now()
-    current_segment = average_weather(get_data_in_range(now - drange, now))
-    print(current_segment)
-    comparison_segment = average_weather(get_data_in_range(now - (drange * 2), now - drange))
-    print(comparison_segment)
+    now = datetime.utcnow()
+    start1 = now - drange
+    end1 = now
+    start2 = now - (drange * 2)
+    end2 = now - drange
+    current_segment = average_weather(get_data_in_range(start1, end1))
+    comparison_segment = average_weather(get_data_in_range(start2, end2))
     return_data = dict()
     for key in current_segment:
         return_data[key] = dict(

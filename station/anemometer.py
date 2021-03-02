@@ -22,7 +22,7 @@ class Anemometer:
         with self.lock:
             if self.readings[self.reading_pointer] > 0:
                 return self.circumference / self.readings[self.reading_pointer]
-            return None
+            return 0.0
 
 
     @property
@@ -34,7 +34,7 @@ class Anemometer:
                     min_reading = reading
         if min_reading > 0:
             return self.circumference / min_reading
-        return None
+        return 0.0
 
     
     @property
@@ -46,7 +46,7 @@ class Anemometer:
                     max_reading = reading
         if max_reading > 0:
             return self.circumference / max_reading
-        return None
+        return 0.0
 
 
     @property
@@ -58,10 +58,11 @@ class Anemometer:
                 if reading is not None:
                     total += reading
                     count += 1.0
-        avg = total / count
-        if avg > 0:
-            return self.circumference / avg
-        return None
+        if count > 0:
+            avg = total / count
+            if avg > 0:
+                return self.circumference / avg
+        return 0.0
 
 
     def hall_interrupt(self, _):
