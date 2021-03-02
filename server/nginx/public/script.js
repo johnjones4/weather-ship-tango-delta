@@ -52,39 +52,9 @@ const windSpeedDiv = document.getElementById('wind-speed')
 const relativeHumidityDiv = document.getElementById('relative-humidity')
 const pressureDiv = document.getElementById('pressure')
 
-const loadWeather = () => {
-  return new Promise((resolve, _) => {
-    resolve({
-      avg_wind_speed: {
-        current_value: 1,
-        previous_value: 0.5
-      },
-      min_wind_speed: {
-        current_value: 1,
-        previous_value: 0.5
-      },
-      max_wind_speed: {
-        current_value: 1,
-        previous_value: 0.5
-      },
-      temperature: {
-        current_value: 24.5,
-        previous_value: 20
-      },
-      gas: {
-        current_value: 1,
-        previous_value: 1
-      },
-      relative_humidity: {
-        current_value: 0.9,
-        previous_value: 0.89
-      },
-      pressure: {
-        current_value: 10000,
-        previous_value: 0.5
-      }
-    })
-  })
+const loadWeather = async () => {
+  const resp = await fetch('/api/weather/average?range=10')
+  return await resp.json()
 }
 
 const getDirection = (oldValue, newValue) => {
