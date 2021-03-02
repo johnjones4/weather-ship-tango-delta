@@ -39,7 +39,7 @@ class Anemometer:
     
     @property
     def min_speed(self):
-        max_reading = 0
+        max_reading = float("-inf")
         with self.lock:
             for reading in self.readings:
                 if reading is not None and reading > max_reading:
