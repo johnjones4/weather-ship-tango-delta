@@ -53,7 +53,7 @@ const relativeHumidityDiv = document.getElementById('relative-humidity')
 const pressureDiv = document.getElementById('pressure')
 
 const loadWeather = async () => {
-  const resp = await fetch('/api/weather/average?range=10')
+  const resp = await fetch('/api/weather/average?range=60')
   return await resp.json()
 }
 
