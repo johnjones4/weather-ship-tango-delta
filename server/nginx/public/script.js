@@ -75,8 +75,6 @@ const doConversion = (key, value) => {
       return value * 2.237
     case 'temperature':
       return value * 1.8 + 32
-    case 'relative_humidity':
-      return value * 100
     case 'pressure':
       return value / 3386
     default:
