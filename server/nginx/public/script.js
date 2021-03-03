@@ -76,7 +76,7 @@ const doConversion = (key, value) => {
     case 'temperature':
       return value * 1.8 + 32
     case 'pressure':
-      return value / 3386
+      return value / 3386.0 * 100.0
     default:
       return value
   }
