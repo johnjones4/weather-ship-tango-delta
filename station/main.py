@@ -7,6 +7,7 @@ import consts
 from anemometer import Anemometer
 import requests
 import json
+import sys
 
 def take_reading():
     try:
@@ -34,9 +35,12 @@ if __name__ == "__main__":
     I2C_INSTANCE = I2C(board.SCL, board.SDA)
     BME680 = adafruit_bme680.Adafruit_BME680_I2C(I2C_INSTANCE, debug=False)
 
-    while True:
+    main_start = time.time()
+    while time.time() - main_start < 60 * 60:
         start = time.time()
         take_reading()
         ANEMOMETER.reset()
         finish = time.time()
         time.sleep(consts.SLEEP_TIME - (finish - start))
+
+    sys.exit(0)
