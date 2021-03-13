@@ -99,7 +99,8 @@ def get_average():
 def post_data():
     if not request.json:
         raise Exception("no json body")
-    if not request.json["timestamp"]:
-        request.json["timestamp"] = time.time()
-    insert_data(request.json)
-    return jsonify(request.json)
+    weather = request.json
+    if not weather["timestamp"]:
+        weather["timestamp"] = time.time()
+    insert_data(weather)
+    return jsonify(weather)
