@@ -137,3 +137,5 @@ data
 .env
 .vscode
 __pycache__
+secrets.h
+.DS_Store
