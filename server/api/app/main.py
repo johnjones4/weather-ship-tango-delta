@@ -3,6 +3,7 @@ import psycopg2
 import app.consts as consts
 from datetime import datetime, timedelta
 from threading import Lock
+import time
 
 APP = Flask(__name__)
 CONN = psycopg2.connect(database=consts.POSTGRES_DB, user=consts.POSTGRES_USER, password=consts.POSTGRES_PASSWORD, host=consts.POSTGRES_HOST, port=consts.POSTGRES_PORT)
@@ -98,5 +99,7 @@ def get_average():
 def post_data():
     if not request.json:
         raise Exception("no json body")
+    if not request.json["timestamp"]:
+        request.json["timestamp"] = time.time()
     insert_data(request.json)
     return jsonify(request.json)
