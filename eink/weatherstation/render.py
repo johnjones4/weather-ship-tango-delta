@@ -1,11 +1,23 @@
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+import urllib.request
+import json
 
 DIRECTION_UP = 0
 DIRECTION_DOWN = 1
 DIRECTION_NONE = 2
 
 FONT_PATH = "./Questrial-Regular.ttf"
+
+API_PATH = "http://weather.apps.local.johnjonesfour.com/api/weather/average?range=10"
+
+
+def fetch_weather():
+    try:
+        with urllib.request.urlopen(API_PATH) as response:
+            return json.loads(response.read())
+    except:
+        return None
 
 
 def get_direction(old_value, new_value):
@@ -19,15 +31,16 @@ def get_direction(old_value, new_value):
 
 def do_conversion(key, value):
     if key == "avg_wind_speed" or key == "min_wind_speed" or key == "max_wind_speed":
-        return int(value * 2.237)
+        val = value * 2.237
+        return round(val, 1) if val < 10 else int(round(val))
     elif key == "temperature":
-        return int(value * 1.8 + 32)
+        return int(round(value * 1.8 + 32))
     elif key == "relative_humidity":
-        return int(value * 100)
+        return int(round(value))
     elif key == "pressure":
-        return int(value / 3386 * 100)
+        return int(round(value / 3386 * 100))
     else:
-        return value
+        return int(round(value))
 
 
 def convert_weather(weather):

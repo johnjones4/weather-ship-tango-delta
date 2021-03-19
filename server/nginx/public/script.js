@@ -126,7 +126,7 @@ const renderData = (weather) => {
   temperatureDiv.innerHTML = `${weather.temperature.value.toFixed(1)}&deg;`
   temperatureDiv.classList = generateClasses(weather.temperature)
 
-  windSpeedDiv.innerHTML = weather.avg_wind_speed.value.toFixed(1)
+  windSpeedDiv.innerHTML = weather.max_wind_speed.value.toFixed(1)
   windSpeedDiv.classList = generateClasses(weather.max_wind_speed)
 
   relativeHumidityDiv.innerHTML = `${weather.relative_humidity.value.toFixed(0)}%`
