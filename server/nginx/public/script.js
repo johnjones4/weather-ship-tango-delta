@@ -53,7 +53,7 @@ const relativeHumidityDiv = document.getElementById('relative-humidity')
 const pressureDiv = document.getElementById('pressure')
 
 const loadWeather = async () => {
-  const resp = await fetch('/api/weather/average?range=60')
+  const resp = await fetch('/api/weather/average?range=10')
   return await resp.json()
 }
 
@@ -127,7 +127,7 @@ const renderData = (weather) => {
   temperatureDiv.classList = generateClasses(weather.temperature)
 
   windSpeedDiv.innerHTML = weather.avg_wind_speed.value.toFixed(1)
-  windSpeedDiv.classList = generateClasses(weather.avg_wind_speed)
+  windSpeedDiv.classList = generateClasses(weather.max_wind_speed)
 
   relativeHumidityDiv.innerHTML = `${weather.relative_humidity.value.toFixed(0)}%`
   relativeHumidityDiv.classList = generateClasses(weather.relative_humidity)

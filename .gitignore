@@ -139,3 +139,4 @@ data
 __pycache__
 secrets.h
 .DS_Store
+*.ttf

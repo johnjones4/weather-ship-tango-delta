@@ -14,7 +14,7 @@ const int anemometerPin = 33;
 const int anemometerDebounce = 200;
 const int anemometerBufferSize = 100;
 const double anemometerCircumference = 0.50265482457;
-unsigned long anemometerElapsedLimit = 5000;
+const unsigned long anemometerElapsedLimit = 5000;
 
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
@@ -37,7 +37,7 @@ void connectToNetwork() {
  
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Establishing connection to WiFi..");
+//    Serial.println("Establishing connection to WiFi..");
   }
  
   Serial.println("Connected to network");
@@ -131,7 +131,7 @@ void logWeatherIfReady(int now) {
 
     if (bme.performReading()) {
       temperature = bme.temperature;
-      pressure = bme.pressure / 1000.0;
+      pressure = bme.pressure / 100.0;
       humidity = bme.humidity;
       gas = bme.gas_resistance;
     }
@@ -148,6 +148,8 @@ void logWeatherIfReady(int now) {
     int httpResponseCode = http.POST(postData);
     Serial.println(postData);
     Serial.println(httpResponseCode);
+
+    WiFi.disconnect();
 
     lastPost = millis();
   }
