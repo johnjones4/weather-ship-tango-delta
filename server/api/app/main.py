@@ -3,7 +3,6 @@ import psycopg2
 import app.consts as consts
 from datetime import datetime, timedelta
 from threading import Lock
-import time
 
 APP = Flask(__name__)
 CONN = psycopg2.connect(database=consts.POSTGRES_DB, user=consts.POSTGRES_USER, password=consts.POSTGRES_PASSWORD, host=consts.POSTGRES_HOST, port=consts.POSTGRES_PORT)
@@ -13,13 +12,14 @@ DB_LOCK = Lock()
 def parse_row(row):
     return dict(
         timestamp=int(datetime.timestamp(row[0])),
-        avg_wind_speed=row[1],
-        min_wind_speed=row[2],
-        max_wind_speed=row[3],
-        temperature=row[4],
-        gas=row[5],
-        relative_humidity=row[6],
-        pressure=row[7]
+        uptime=row[1],
+        avg_wind_speed=row[2],
+        min_wind_speed=row[3],
+        max_wind_speed=row[4],
+        temperature=row[5],
+        gas=row[6],
+        relative_humidity=row[7],
+        pressure=row[8]
     )
 
 
@@ -27,7 +27,7 @@ def average_weather(series):
     totals = {}
     for record in series:
         for key in record:
-            if key != "timestamp":
+            if key not in ["timestamp", "uptime"]:
                 if key not in totals:
                     totals[key] = 0.0
                 totals[key] += record[key]
@@ -39,15 +39,16 @@ def average_weather(series):
 
 def get_data_in_range(start: datetime, end: datetime):
     with DB_LOCK:
-        CUR.execute("SELECT timestamp, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure FROM weather WHERE timestamp >= %s AND timestamp <= %s", (start, end))
+        CUR.execute("SELECT timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure FROM weather WHERE timestamp >= %s AND timestamp <= %s", (start, end))
         return [parse_row(row) for row in CUR]
 
 
 def insert_data(data):
     with DB_LOCK:
         print(data)
-        CUR.execute("INSERT INTO weather (timestamp, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)", (
-            datetime.fromtimestamp(data["timestamp"]),
+        CUR.execute("INSERT INTO weather (timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (
+            datetime.now(),
+            data["uptime"],
             data["avg_wind_speed"],
             data["min_wind_speed"],
             data["max_wind_speed"],
@@ -97,10 +98,8 @@ def get_average():
 
 @APP.route("/api/weather", methods=["POST"])
 def post_data():
-    if not request.json:
-        raise Exception("no json body")
     weather = request.json
-    if not weather["timestamp"]:
-        weather["timestamp"] = time.time()
+    if not weather:
+        raise Exception("no json body")
     insert_data(weather)
     return jsonify(weather)

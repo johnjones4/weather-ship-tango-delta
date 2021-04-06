@@ -16,32 +16,37 @@ const int anemometerBufferSize = 100;
 const double anemometerCircumference = 0.50265482457;
 const unsigned long anemometerElapsedLimit = 5000;
 
-const char* ssid = WIFI_SSID;
-const char* password = WIFI_PASSWORD;
-const char* postURL = POST_URL;
-
 double anemometerBuffer[anemometerBufferSize];
 int anemometerBufferPointer = 0;
 unsigned long lastAnemometerSpinTime = 0;
 bool lastState = false;
 
+unsigned long bootTime = 0;
 unsigned long lastNow = 0;
 unsigned long lastPost = 0;
 
-bool isWifiConnected() {
-  return WiFi.status() == WL_CONNECTED;
-}
+void connectWifi() {
+  WiFi.config(STATIC_IP, STATIC_GATEWAY, STATIC_SUBNET, STATIC_DNS); 
+  
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-void connectToNetwork() {
-  WiFi.begin(ssid, password);
- 
+  const unsigned long start = millis();
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-//    Serial.println("Establishing connection to WiFi..");
+    Serial.println("Establishing connection to WiFi..");
+    if (millis() - start > 60000) {
+      Serial.println("WiFi timeout ... rebooting");
+      ESP.restart();
+    }
   }
  
   Serial.println("Connected to network");
  
+}
+
+void disconnectWifi() {
+  WiFi.disconnect(true);
+  Serial.println("Disconnected from network");
 }
 
 void checkAnemometer(unsigned long now) {
@@ -119,6 +124,8 @@ double getMaxWindSpeed() {
 
 void logWeatherIfReady(int now) {
   if (now - lastPost >= postDataDelay) {
+    Serial.printf("Reporting data at %d\n", now);
+    
     double averageWindSpeed = getAverageWindSpeed();
     double maxWindSpeed = getMaxWindSpeed();
     double minWindSpeed = getMinWindSpeed();
@@ -134,22 +141,28 @@ void logWeatherIfReady(int now) {
       pressure = bme.pressure / 100.0;
       humidity = bme.humidity;
       gas = bme.gas_resistance;
+    } else {
+      Serial.println("Bad sensor reading ... rebooting");
+      ESP.restart();
     }
 
-    if (!isWifiConnected()) {
-      connectToNetwork();
-    }
+
+    connectWifi();
     
     HTTPClient http;
-    http.begin(postURL);
+    http.begin(POST_URL);
     http.addHeader("Content-Type", "application/json");
     char postData[256];
-    snprintf(postData, sizeof(postData), "{\"timestamp\":null,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
+    snprintf(postData, sizeof(postData), "{\"uptime\":%d,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", now, averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
     int httpResponseCode = http.POST(postData);
     Serial.println(postData);
     Serial.println(httpResponseCode);
+    if (httpResponseCode != 200) {
+      Serial.println("Bad HTTP response code ... rebooting");
+      ESP.restart();
+    }
 
-    WiFi.disconnect();
+    disconnectWifi();
 
     lastPost = millis();
   }
@@ -158,9 +171,13 @@ void logWeatherIfReady(int now) {
 void setup() {
   Serial.begin(115200);
 
+  Serial.println("Starting up");
+
+  bootTime = millis();
+
   if (!bme.begin()) {
     Serial.println(F("Could not find a valid BME680 sensor, check wiring!"));
-    while (1);
+    ESP.restart();
   }
 
   // Set all values in the wind speed buffer to -1;
@@ -172,6 +189,8 @@ void setup() {
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150); // 320*C for 150 ms 
+
+  Serial.println("Ready");
 }
 
 void loop() {

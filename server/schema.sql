@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS weather (
   timestamp TIMESTAMP NOT NULL PRIMARY KEY,
+  uptime INTEGER NOT NULL,
   avg_wind_speed REAL NOT NULL,
   min_wind_speed REAL NOT NULL,
   max_wind_speed REAL NOT NULL,
