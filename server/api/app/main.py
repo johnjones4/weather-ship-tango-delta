@@ -69,7 +69,7 @@ def get_downtime_stats():
     with DB_LOCK:
         CUR.execute("SELECT timestamp FROM weather WHERE timestamp >= NOW() - INTERVAL '24 HOURS' ORDER BY timestamp")
         times = [row[0] for row in CUR]
-        if len(time) < 2:
+        if len(times) < 2:
             return {
                 "average_spaces": 0,
                 "total_long_spaces": 0,
