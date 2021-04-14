@@ -106,7 +106,7 @@ def get_status():
 
 @APP.route("/api/info")
 def get_info():
-    return jsonify(
+    return jsonify({
         "reboots": get_recent_reboots(),
         "downtime": get_downtime_stats()
     })
