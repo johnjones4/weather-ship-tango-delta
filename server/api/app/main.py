@@ -76,7 +76,7 @@ def get_downtime_stats():
                 "average_long_spaces": 0,
                 "max_long_space": 0
             }
-        last_time = time[0]
+        last_time = times[0]
         max_time = 0
         long_total = 0
         long_count = 0
