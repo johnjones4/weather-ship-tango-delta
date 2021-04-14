@@ -152,7 +152,7 @@ void logWeatherIfReady(int now) {
     HTTPClient http;
     http.begin(POST_URL);
     http.addHeader("Content-Type", "application/json");
-    char postData[256];
+    char postData[512];
     snprintf(postData, sizeof(postData), "{\"uptime\":%d,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", now, averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
     int httpResponseCode = http.POST(postData);
     Serial.println(postData);

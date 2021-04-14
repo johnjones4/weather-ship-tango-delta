@@ -45,7 +45,6 @@ def get_data_in_range(start: datetime, end: datetime):
 
 def insert_data(data):
     with DB_LOCK:
-        print(data)
         CUR.execute("INSERT INTO weather (timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (
             datetime.now(),
             data["uptime"],
@@ -60,9 +59,57 @@ def insert_data(data):
         CONN.commit()
 
 
+def get_recent_reboots():
+    with DB_LOCK:
+        CUR.execute("SELECT count(*) FROM weather WHERE uptime = 60000 AND timestamp >= NOW() - INTERVAL '24 HOURS'")
+        return CUR.fetchone()[0]
+
+
+def get_downtime_stats():
+    with DB_LOCK:
+        CUR.execute("SELECT timestamp FROM weather WHERE timestamp >= NOW() - INTERVAL '24 HOURS' ORDER BY timestamp")
+        times = [row[0] for row in CUR]
+        if len(time) < 2:
+            return {
+                "average_spaces": 0,
+                "total_long_spaces": 0,
+                "average_long_spaces": 0,
+                "max_long_space": 0
+            }
+        last_time = time[0]
+        max_time = 0
+        long_total = 0
+        long_count = 0
+        total = 0
+        for time in times[1:]:
+            space = (time - last_time).total_seconds()
+            total += space
+            if space > 70:
+                long_total += space
+                long_count += 1
+            if space > max_time:
+                max_time = space
+            last_time = time
+        return {
+            "average_spaces": total / len(times) - 1,
+            "total_long_spaces": long_total,
+            "average_long_spaces": long_total / long_count,
+            "max_long_space": max_time
+        }
+
+
+
 @APP.route("/api")
 def get_status():
     return jsonify({"status": "ok"})
+
+
+@APP.route("/api/info")
+def get_info():
+    return jsonify(
+        "reboots": get_recent_reboots(),
+        "downtime": get_downtime_stats()
+    })
 
 
 @APP.route("/api/weather/series")
