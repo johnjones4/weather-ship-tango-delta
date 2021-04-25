@@ -15,7 +15,7 @@ func getStatus(w http.ResponseWriter, req *http.Request) {
 }
 
 func getInfo(w http.ResponseWriter, req *http.Request) {
-	now := time.Now()
+	now := time.Now().UTC()
 	then := now.Add(time.Hour * -24 * 7)
 	downtime, err := getDowntimeStats(then, now)
 	if err != nil {
@@ -38,7 +38,7 @@ func getWeatherAverage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	mrange := time.Minute * time.Duration(irange) * -1
-	now := time.Now()
+	now := time.Now().UTC()
 	start1 := now.Add(mrange)
 	end1 := now
 	start2 := now.Add(mrange * 2)
@@ -84,7 +84,7 @@ func insertNewWeather(w http.ResponseWriter, req *http.Request) {
 		errorResponse(w, err)
 		return
 	}
-	weather.Timestamp = time.Now()
+	weather.Timestamp = time.Now().UTC()
 	err = insertWeatherData(weather)
 	if err != nil {
 		errorResponse(w, err)
