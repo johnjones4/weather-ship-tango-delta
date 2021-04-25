@@ -30,6 +30,7 @@ func getWeatherInRange(start time.Time, end time.Time) ([]Weather, error) {
 	if err != nil {
 		return make([]Weather, 0), err
 	}
+	defer rows.Close()
 	output := make([]Weather, 0)
 	for rows.Next() {
 		w := Weather{}
@@ -66,6 +67,7 @@ func getRebootCount(start time.Time, end time.Time) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer rows.Close()
 	if rows.Next() {
 		var count int
 		rows.Scan(&count)
@@ -81,6 +83,7 @@ func getDowntimeStats(start time.Time, end time.Time) (DowntimeStats, error) {
 	if err != nil {
 		return DowntimeStats{}, err
 	}
+	defer rows.Close()
 	timestamps := make([]time.Time, 0)
 	for rows.Next() {
 		var timestamp time.Time
@@ -124,6 +127,7 @@ func isStationDown() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 	if !rows.Next() {
 		return true, nil
 	}
