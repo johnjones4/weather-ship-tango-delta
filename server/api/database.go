@@ -19,8 +19,14 @@ func connect() {
 	pool = _pool
 }
 
+func timeoutContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), time.Duration(time.Second*10))
+}
+
 func getWeatherInRange(start time.Time, end time.Time) ([]Weather, error) {
-	rows, err := pool.Query(context.Background(), "SELECT timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure FROM weather WHERE timestamp >= $1 AND timestamp <= $2", start, end)
+	ctx, cancel := timeoutContext()
+	defer cancel()
+	rows, err := pool.Query(ctx, "SELECT timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure FROM weather WHERE timestamp >= $1 AND timestamp <= $2", start, end)
 	if err != nil {
 		return make([]Weather, 0), err
 	}
@@ -37,7 +43,9 @@ func getWeatherInRange(start time.Time, end time.Time) ([]Weather, error) {
 }
 
 func insertWeatherData(weather Weather) error {
-	_, err := pool.Exec(context.Background(), "INSERT INTO weather (timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+	ctx, cancel := timeoutContext()
+	defer cancel()
+	_, err := pool.Exec(ctx, "INSERT INTO weather (timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
 		weather.Timestamp,
 		weather.Uptime,
 		weather.AvgWindSpeed,
@@ -52,7 +60,9 @@ func insertWeatherData(weather Weather) error {
 }
 
 func getRebootCount(start time.Time, end time.Time) (int, error) {
-	rows, err := pool.Query(context.Background(), "SELECT count(*) FROM weather WHERE uptime = 60000 AND timestamp >= $1 AND timestamp <= $2", start, end)
+	ctx, cancel := timeoutContext()
+	defer cancel()
+	rows, err := pool.Query(ctx, "SELECT count(*) FROM weather WHERE uptime = 60000 AND timestamp >= $1 AND timestamp <= $2", start, end)
 	if err != nil {
 		return 0, err
 	}
@@ -65,7 +75,9 @@ func getRebootCount(start time.Time, end time.Time) (int, error) {
 }
 
 func getDowntimeStats(start time.Time, end time.Time) (DowntimeStats, error) {
-	rows, err := pool.Query(context.Background(), "SELECT timestamp FROM weather WHERE timestamp >= $1 AND timestamp <= $2", start, end)
+	ctx, cancel := timeoutContext()
+	defer cancel()
+	rows, err := pool.Query(ctx, "SELECT timestamp FROM weather WHERE timestamp >= $1 AND timestamp <= $2", start, end)
 	if err != nil {
 		return DowntimeStats{}, err
 	}
@@ -105,8 +117,10 @@ func getDowntimeStats(start time.Time, end time.Time) (DowntimeStats, error) {
 }
 
 func isStationDown() (bool, error) {
+	ctx, cancel := timeoutContext()
+	defer cancel()
 	twoMinutesAgo := time.Now().UTC().Add(-2 * time.Minute)
-	rows, err := pool.Query(context.Background(), "SELECT count(*) FROM weather WHERE timestamp >= $1", twoMinutesAgo)
+	rows, err := pool.Query(ctx, "SELECT count(*) FROM weather WHERE timestamp >= $1", twoMinutesAgo)
 	if err != nil {
 		return false, err
 	}
