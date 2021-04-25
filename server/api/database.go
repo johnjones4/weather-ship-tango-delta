@@ -103,3 +103,12 @@ func getDowntimeStats(start time.Time, end time.Time) (DowntimeStats, error) {
 		MaxLongGap:      maxTime,
 	}, nil
 }
+
+func isStationDown() (bool, error) {
+	twoMinutesAgo := time.Now().Add(-2 * time.Minute)
+	rows, err := pool.Query(context.Background(), "SELECT count(*) FROM weather WHERE uptime = 60000 AND timestamp >= $1", twoMinutesAgo)
+	if err != nil {
+		return false, err
+	}
+	return !rows.Next(), nil
+}
