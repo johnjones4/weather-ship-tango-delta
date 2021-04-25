@@ -116,3 +116,11 @@ def draw_weather(weather, width, height):
     draw.text((date_x, date_y), date_str, font=date_fnt, fill=0)
     
     return image
+
+def render(width, height):
+    raw_weather = fetch_weather()
+    if raw_weather:
+        weather = convert_weather(raw_weather)
+        return draw_weather(weather, width, height)
+    else:
+        return Image.open("./fallback.png")
