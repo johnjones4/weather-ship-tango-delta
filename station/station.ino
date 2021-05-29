@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include <HTTPClient.h>
+#include <esp_task_wdt.h>
 #include "Adafruit_BME680.h"
 #include "secrets.h"
 
@@ -122,53 +123,60 @@ double getMaxWindSpeed() {
   return maxSpeed;
 }
 
-void logWeatherIfReady(int now) {
-  if (now - lastPost >= postDataDelay) {
-    Serial.printf("Reporting data at %d\n", now);
-    
-    double averageWindSpeed = getAverageWindSpeed();
-    double maxWindSpeed = getMaxWindSpeed();
-    double minWindSpeed = getMinWindSpeed();
-    clearAnemometerBuffer();
-
-    float temperature = 0;
-    float pressure = 0;
-    float humidity = 0;
-    float gas = 0;
-
-    if (bme.performReading()) {
-      temperature = bme.temperature;
-      pressure = bme.pressure / 100.0;
-      humidity = bme.humidity;
-      gas = bme.gas_resistance;
-    } else {
-      Serial.println("Bad sensor reading ... rebooting");
-      ESP.restart();
-    }
-
-
-    connectWifi();
-    
-    HTTPClient http;
-    http.begin(POST_URL);
-    http.addHeader("Content-Type", "application/json");
-    char postData[512];
-    snprintf(postData, sizeof(postData), "{\"uptime\":%d,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", now, averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
-    int httpResponseCode = http.POST(postData);
-    Serial.println(postData);
-    Serial.println(httpResponseCode);
-    if (httpResponseCode != 200) {
-      Serial.println("Bad HTTP response code ... rebooting");
-      ESP.restart();
-    }
-
-    disconnectWifi();
-
-    lastPost = millis();
+bool logWeatherIfReady(int now) {
+  if (now - lastPost < postDataDelay) {
+    return false;
   }
+  
+  Serial.printf("Reporting data at %d\n", now);
+  
+  double averageWindSpeed = getAverageWindSpeed();
+  double maxWindSpeed = getMaxWindSpeed();
+  double minWindSpeed = getMinWindSpeed();
+  clearAnemometerBuffer();
+
+  float temperature = 0;
+  float pressure = 0;
+  float humidity = 0;
+  float gas = 0;
+
+  if (bme.performReading()) {
+    temperature = bme.temperature;
+    pressure = bme.pressure / 100.0;
+    humidity = bme.humidity;
+    gas = bme.gas_resistance;
+  } else {
+    Serial.println("Bad sensor reading ... rebooting");
+    ESP.restart();
+  }
+
+
+  connectWifi();
+  
+  HTTPClient http;
+  http.begin(POST_URL);
+  http.addHeader("Content-Type", "application/json");
+  char postData[512];
+  snprintf(postData, sizeof(postData), "{\"uptime\":%d,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", now, averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
+  int httpResponseCode = http.POST(postData);
+  Serial.println(postData);
+  Serial.println(httpResponseCode);
+  if (httpResponseCode != 200) {
+    Serial.println("Bad HTTP response code ... rebooting");
+    ESP.restart();
+  }
+
+  disconnectWifi();
+
+  lastPost = millis();
+
+  return true;
 }
 
 void setup() {
+  esp_task_wdt_init(90, true);
+  esp_task_wdt_add(NULL);
+  
   Serial.begin(115200);
 
   Serial.println("Starting up");
@@ -202,5 +210,7 @@ void loop() {
   
   checkAnemometer(now);
 
-  logWeatherIfReady(now);
+  if (logWeatherIfReady(now)) {
+    esp_task_wdt_reset();
+  }
 }
