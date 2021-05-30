@@ -16,6 +16,7 @@ const int anemometerDebounce = 200;
 const int anemometerBufferSize = 100;
 const double anemometerCircumference = 0.50265482457;
 const unsigned long anemometerElapsedLimit = 5000;
+const int heartbeatPin = 27;
 
 double anemometerBuffer[anemometerBufferSize];
 int anemometerBufferPointer = 0;
@@ -173,6 +174,15 @@ bool logWeatherIfReady(int now) {
   return true;
 }
 
+void heartbeat() {
+  digitalWrite(heartbeatPin, HIGH);
+  unsigned long start = millis();
+  while (millis() - start < 500) {
+    
+  }
+  digitalWrite(heartbeatPin, LOW);
+}
+
 void setup() {
   esp_task_wdt_init(90, true);
   esp_task_wdt_add(NULL);
@@ -180,6 +190,8 @@ void setup() {
   Serial.begin(115200);
 
   Serial.println("Starting up");
+
+  pinMode(heartbeatPin, OUTPUT);
 
   bootTime = millis();
 
@@ -198,6 +210,8 @@ void setup() {
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150); // 320*C for 150 ms 
 
+  heartbeat();
+
   Serial.println("Ready");
 }
 
@@ -212,5 +226,6 @@ void loop() {
 
   if (logWeatherIfReady(now)) {
     esp_task_wdt_reset();
+    heartbeat();
   }
 }
