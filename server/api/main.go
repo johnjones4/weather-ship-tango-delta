@@ -23,7 +23,7 @@ func main() {
 			sendSMS(down)
 		}
 		lastStatus = down
-		time.Sleep(time.Minute * 5)
+		time.Sleep(time.Minute * 60)
 	}
 }
 

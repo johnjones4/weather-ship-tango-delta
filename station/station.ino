@@ -177,7 +177,7 @@ bool logWeatherIfReady(int now) {
 void heartbeat() {
   digitalWrite(heartbeatPin, HIGH);
   unsigned long start = millis();
-  while (millis() - start < 500) {
+  while (millis() - start < 2000) {
     
   }
   digitalWrite(heartbeatPin, LOW);
@@ -192,6 +192,7 @@ void setup() {
   Serial.println("Starting up");
 
   pinMode(heartbeatPin, OUTPUT);
+  digitalWrite(heartbeatPin, LOW);
 
   bootTime = millis();
 
