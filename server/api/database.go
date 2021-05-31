@@ -122,7 +122,7 @@ func getDowntimeStats(start time.Time, end time.Time) (DowntimeStats, error) {
 func isStationDown() (bool, error) {
 	ctx, cancel := timeoutContext()
 	defer cancel()
-	twoMinutesAgo := time.Now().UTC().Add(-2 * time.Minute)
+	twoMinutesAgo := time.Now().UTC().Add(-60 * time.Minute)
 	rows, err := pool.Query(ctx, "SELECT count(*) FROM weather WHERE timestamp >= $1", twoMinutesAgo)
 	if err != nil {
 		return false, err
