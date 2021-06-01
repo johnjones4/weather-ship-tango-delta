@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -75,24 +77,44 @@ func jsonResponse(w http.ResponseWriter, info interface{}) {
 	w.Write(jsonInfo)
 }
 
-func determineAverageWeather(ws []Weather) averageWeather {
-	a := averageWeather{0, 0, 0, 0, 0, 0, 0}
-	for _, w := range ws {
-		a.avgWindSpeed += w.AvgWindSpeed
-		a.minWindSpeed += w.MinWindSpeed
-		a.maxWindSpeed += w.MaxWindSpeed
-		a.temperature += w.Temperature
-		a.gas += w.Gas
-		a.relativeHumidity += w.RelativeHumidity
-		a.pressure += w.Pressure
+func truncatedMean(values []float64, p float64) float64 {
+	sort.Float64s(values)
+	k := int(math.Ceil(float64(len(values)) * p))
+	total := 0.0
+	r := len(values) - (k * 2)
+	for i := k; i < r; i++ {
+		total += values[i]
 	}
-	t := float64(len(ws))
-	a.avgWindSpeed = a.avgWindSpeed / t
-	a.minWindSpeed = a.minWindSpeed / t
-	a.maxWindSpeed = a.maxWindSpeed / t
-	a.temperature = a.temperature / t
-	a.gas = a.gas / t
-	a.relativeHumidity = a.relativeHumidity / t
-	a.pressure = a.pressure / t
+	return total / float64(r)
+}
+
+func mapWeatherValue(ws []Weather, m func(w Weather) float64) []float64 {
+	arr := make([]float64, len(ws))
+	for i, w := range ws {
+		arr[i] = m(w)
+	}
+	return arr
+}
+
+func determineAverageWeather(ws []Weather) averageWeather {
+	avgWindSpeeds := mapWeatherValue(ws, func(w Weather) float64 { return w.AvgWindSpeed })
+	minWindSpeeds := mapWeatherValue(ws, func(w Weather) float64 { return w.MinWindSpeed })
+	maxWindSpeed := mapWeatherValue(ws, func(w Weather) float64 { return w.MaxWindSpeed })
+	temperatures := mapWeatherValue(ws, func(w Weather) float64 { return w.Temperature })
+	gases := mapWeatherValue(ws, func(w Weather) float64 { return w.Gas })
+	relativeHumidities := mapWeatherValue(ws, func(w Weather) float64 { return w.RelativeHumidity })
+	pressures := mapWeatherValue(ws, func(w Weather) float64 { return w.Pressure })
+
+	p := 0.1
+	a := averageWeather{
+		avgWindSpeed:     truncatedMean(avgWindSpeeds, p),
+		minWindSpeed:     truncatedMean(minWindSpeeds, p),
+		maxWindSpeed:     truncatedMean(maxWindSpeed, p),
+		temperature:      truncatedMean(temperatures, p),
+		gas:              truncatedMean(gases, p),
+		relativeHumidity: truncatedMean(relativeHumidities, p),
+		pressure:         truncatedMean(pressures, p),
+	}
+
 	return a
 }
