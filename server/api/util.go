@@ -91,8 +91,8 @@ func determineAverageWeather(ws []Weather) averageWeather {
 	a.minWindSpeed = a.minWindSpeed / t
 	a.maxWindSpeed = a.maxWindSpeed / t
 	a.temperature = a.temperature / t
-	a.gas += a.gas / t
-	a.relativeHumidity += a.relativeHumidity / t
-	a.pressure += a.pressure / t
+	a.gas = a.gas / t
+	a.relativeHumidity = a.relativeHumidity / t
+	a.pressure = a.pressure / t
 	return a
 }
