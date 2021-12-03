@@ -9,23 +9,18 @@
 
 Adafruit_BME680 bme;
 
-const int postDataDelay = 60000;
+#define MEASUREMENT_TIMEOUT 30
+#define SLEEP_TIME 5 * 60 * 1000 * 1000
+#define ANEMOMETER_PIN 33
+#define ANEMOMETER_DEBOUNCE 200
+#define ANEMOMETER_BUFFER_SIZE 1000
+#define ANEMOMETER_CIRCUMFERENCE 0.50265482457
+#define ANEMOMETER_ELAPSED_LIMIT 5000
 
-const int anemometerPin = 33;
-const int anemometerDebounce = 200;
-const int anemometerBufferSize = 100;
-const double anemometerCircumference = 0.50265482457;
-const unsigned long anemometerElapsedLimit = 5000;
-const int heartbeatPin = 27;
-
-double anemometerBuffer[anemometerBufferSize];
+double anemometerBuffer[ANEMOMETER_BUFFER_SIZE];
 int anemometerBufferPointer = 0;
 unsigned long lastAnemometerSpinTime = 0;
 bool lastState = false;
-
-unsigned long bootTime = 0;
-unsigned long lastNow = 0;
-unsigned long lastPost = 0;
 
 void connectWifi() {
   WiFi.config(STATIC_IP, STATIC_GATEWAY, STATIC_SUBNET, STATIC_DNS); 
@@ -53,12 +48,12 @@ void disconnectWifi() {
 
 void checkAnemometer(unsigned long now) {
   unsigned long elapsed = now - lastAnemometerSpinTime;
-  if (elapsed >= anemometerElapsedLimit) {
+  if (elapsed >= ANEMOMETER_ELAPSED_LIMIT) {
     logAnemometerReading(0);
     lastAnemometerSpinTime = now;
   } else {
-    int val = analogRead(anemometerPin);
-    if (!lastState && val == 0 && elapsed > anemometerDebounce) {
+    int val = analogRead(ANEMOMETER_PIN);
+    if (!lastState && val == 0 && elapsed > ANEMOMETER_DEBOUNCE) {
       logAnemometerReading(elapsed);
       lastAnemometerSpinTime = now;
       lastState = true;
@@ -71,28 +66,29 @@ void checkAnemometer(unsigned long now) {
 void logAnemometerReading(int time) {
   if (time > 0) {
     double seconds = ((double)time) / 1000.0;
-    anemometerBuffer[anemometerBufferPointer] = anemometerCircumference / seconds;
+    anemometerBuffer[anemometerBufferPointer] = ANEMOMETER_CIRCUMFERENCE / seconds;
   } else {
     anemometerBuffer[anemometerBufferPointer] = 0.0;
   }
   anemometerBufferPointer += 1;
-  if (anemometerBufferPointer >= anemometerBufferSize) {
+  if (anemometerBufferPointer >= ANEMOMETER_BUFFER_SIZE) {
     anemometerBufferPointer = 0;
   }
 }
 
 void clearAnemometerBuffer() {
-  for (int i = 0; i < anemometerBufferSize; i++) {
+  for (int i = 0; i < ANEMOMETER_BUFFER_SIZE; i++) {
     anemometerBuffer[i] = -1;
   }
   anemometerBufferPointer = 0;
   lastAnemometerSpinTime = 0;
+  lastState = false;
 }
 
 double getAverageWindSpeed() {
   double total = 0;
   double count = 0;
-  for (int i = 0; i < anemometerBufferSize; i++) {
+  for (int i = 0; i < ANEMOMETER_BUFFER_SIZE; i++) {
     if (anemometerBuffer[i] >= 0) {
       total += (double)anemometerBuffer[i];
       count += 1.0;
@@ -105,8 +101,8 @@ double getAverageWindSpeed() {
 }
 
 double getMinWindSpeed() {
-  double minSpeed = anemometerElapsedLimit + 1;
-  for (int i = 0; i < anemometerBufferSize; i++) {
+  double minSpeed = ANEMOMETER_ELAPSED_LIMIT + 1;
+  for (int i = 0; i < ANEMOMETER_BUFFER_SIZE; i++) {
     if (anemometerBuffer[i] >= 0 && anemometerBuffer[i] < minSpeed) {
       minSpeed = anemometerBuffer[i];
     }
@@ -116,7 +112,7 @@ double getMinWindSpeed() {
 
 double getMaxWindSpeed() {
   double maxSpeed = 0;
-  for (int i = 0; i < anemometerBufferSize; i++) {
+  for (int i = 0; i < ANEMOMETER_BUFFER_SIZE; i++) {
     if (anemometerBuffer[i] >= 0 && anemometerBuffer[i] > maxSpeed) {
       maxSpeed = anemometerBuffer[i];
     }
@@ -124,12 +120,8 @@ double getMaxWindSpeed() {
   return maxSpeed;
 }
 
-bool logWeatherIfReady(int now) {
-  if (now - lastPost < postDataDelay) {
-    return false;
-  }
-  
-  Serial.printf("Reporting data at %d\n", now);
+bool logWeather() {
+  Serial.printf("Reporting data\n");
   
   double averageWindSpeed = getAverageWindSpeed();
   double maxWindSpeed = getMaxWindSpeed();
@@ -158,7 +150,7 @@ bool logWeatherIfReady(int now) {
   http.begin(POST_URL);
   http.addHeader("Content-Type", "application/json");
   char postData[512];
-  snprintf(postData, sizeof(postData), "{\"uptime\":%d,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", now, averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
+  snprintf(postData, sizeof(postData), "{\"uptime\":%d,\"avg_wind_speed\":%f,\"min_wind_speed\":%f,\"max_wind_speed\":%f,\"temperature\":%f,\"gas\":%f,\"relative_humidity\":%f,\"pressure\":%f}", millis(), averageWindSpeed, minWindSpeed, maxWindSpeed, temperature, gas, humidity, pressure);
   int httpResponseCode = http.POST(postData);
   Serial.println(postData);
   Serial.println(httpResponseCode);
@@ -169,18 +161,7 @@ bool logWeatherIfReady(int now) {
 
   disconnectWifi();
 
-  lastPost = millis();
-
   return true;
-}
-
-void heartbeat() {
-  digitalWrite(heartbeatPin, HIGH);
-  unsigned long start = millis();
-  while (millis() - start < 2000) {
-    
-  }
-  digitalWrite(heartbeatPin, LOW);
 }
 
 void setup() {
@@ -190,11 +171,6 @@ void setup() {
   Serial.begin(115200);
 
   Serial.println("Starting up");
-
-  pinMode(heartbeatPin, OUTPUT);
-  digitalWrite(heartbeatPin, LOW);
-
-  bootTime = millis();
 
   if (!bme.begin()) {
     Serial.println(F("Could not find a valid BME680 sensor, check wiring!"));
@@ -211,22 +187,20 @@ void setup() {
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150); // 320*C for 150 ms 
 
-  heartbeat();
-
   Serial.println("Ready");
 }
 
 void loop() {
   unsigned long now = millis();
-  if (lastNow > now) {
-    clearAnemometerBuffer();
-  }
-  lastNow = now;
   
   checkAnemometer(now);
 
-  if (logWeatherIfReady(now)) {
-    esp_task_wdt_reset();
-    heartbeat();
+  if (now / 1000 >= MEASUREMENT_TIMEOUT) {
+    logWeather();
+    esp_sleep_enable_timer_wakeup(SLEEP_TIME);
+    esp_deep_sleep_start();
+    clearAnemometerBuffer();
   }
+
+  esp_task_wdt_reset();
 }
