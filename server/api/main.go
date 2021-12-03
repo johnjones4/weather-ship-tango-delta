@@ -41,6 +41,7 @@ func sendAlert(host string, down bool) error {
 		},
 		"alerts":   []interface{}{},
 		"isNormal": !down,
+		"created":  time.Now().UTC(),
 	}
 
 	payloadBytes, err := json.Marshal(payloadMap)
