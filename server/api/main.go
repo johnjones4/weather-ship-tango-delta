@@ -22,7 +22,10 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		} else if down != lastStatus {
-			sendAlert(os.Getenv("UPSTREAM_URL"), down)
+			err := sendAlert(os.Getenv("UPSTREAM_URL"), down)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 		lastStatus = down
 		time.Sleep(time.Minute * 60)
