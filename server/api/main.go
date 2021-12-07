@@ -17,14 +17,17 @@ func main() {
 	go runHttpServer()
 	fmt.Println("HTTP server up")
 	lastStatus := true
+	lastStatusTime := time.Now()
 	for {
 		down, err := isStationDown()
 		if err != nil {
 			fmt.Println(err)
-		} else if down != lastStatus {
+		} else if down != lastStatus || lastStatusTime.Before(time.Now().Add(-24*time.Hour)) {
 			err := sendAlert(os.Getenv("UPSTREAM_URL"), down)
 			if err != nil {
 				fmt.Println(err)
+			} else {
+				lastStatusTime = time.Now()
 			}
 		}
 		lastStatus = down
