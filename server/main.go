@@ -36,6 +36,9 @@ func main() {
 }
 
 func sendAlert(host string, down bool) error {
+	if host == "" {
+		return nil
+	}
 	payloadMap := map[string]interface{}{
 		"eventVendorType": "weather-station",
 		"eventVendorID":   uuid.NewString(),

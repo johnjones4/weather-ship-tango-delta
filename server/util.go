@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
-	"sort"
 	"strings"
 	"time"
 
@@ -75,46 +73,4 @@ func jsonResponse(w http.ResponseWriter, info interface{}) {
 	}
 	w.Header().Add("Content-type", "application/json")
 	w.Write(jsonInfo)
-}
-
-func truncatedMean(values []float64, p float64) float64 {
-	sort.Float64s(values)
-	k := int(math.Ceil(float64(len(values)) * p))
-	total := 0.0
-	r := len(values) - (k * 2)
-	for i := k; i < r; i++ {
-		total += values[i]
-	}
-	return total / float64(r)
-}
-
-func mapWeatherValue(ws []Weather, m func(w Weather) float64) []float64 {
-	arr := make([]float64, len(ws))
-	for i, w := range ws {
-		arr[i] = m(w)
-	}
-	return arr
-}
-
-func determineAverageWeather(ws []Weather) averageWeather {
-	avgWindSpeeds := mapWeatherValue(ws, func(w Weather) float64 { return w.AvgWindSpeed })
-	minWindSpeeds := mapWeatherValue(ws, func(w Weather) float64 { return w.MinWindSpeed })
-	maxWindSpeed := mapWeatherValue(ws, func(w Weather) float64 { return w.MaxWindSpeed })
-	temperatures := mapWeatherValue(ws, func(w Weather) float64 { return w.Temperature })
-	gases := mapWeatherValue(ws, func(w Weather) float64 { return w.Gas })
-	relativeHumidities := mapWeatherValue(ws, func(w Weather) float64 { return w.RelativeHumidity })
-	pressures := mapWeatherValue(ws, func(w Weather) float64 { return w.Pressure })
-
-	p := 0.1
-	a := averageWeather{
-		avgWindSpeed:     truncatedMean(avgWindSpeeds, p),
-		minWindSpeed:     truncatedMean(minWindSpeeds, p),
-		maxWindSpeed:     truncatedMean(maxWindSpeed, p),
-		temperature:      truncatedMean(temperatures, p),
-		gas:              truncatedMean(gases, p),
-		relativeHumidity: truncatedMean(relativeHumidities, p),
-		pressure:         truncatedMean(pressures, p),
-	}
-
-	return a
 }
