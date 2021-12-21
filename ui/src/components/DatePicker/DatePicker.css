@@ -1,0 +1,13 @@
+.DatePicker {
+  display: flex;
+  flex-direction: row;
+  margin-left: 1em;
+}
+
+.DatePicker select {
+  width: 90px;
+}
+
+.DatePicker input[type=date] {
+  width: 150px;
+}

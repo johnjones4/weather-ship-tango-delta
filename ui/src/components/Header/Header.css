@@ -1,3 +1,8 @@
 .Header {
   margin-bottom: 1em;
 }
+
+.Header-form {
+  display: flex;
+  flex-direction: row;
+}

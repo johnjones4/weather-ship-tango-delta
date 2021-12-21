@@ -1,0 +1,8 @@
+.Plot .card-header {
+  display: flex;
+  align-items: center;
+}
+
+.Plot-name {
+  flex-grow: 1;
+}

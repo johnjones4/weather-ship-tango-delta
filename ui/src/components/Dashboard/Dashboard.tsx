@@ -15,25 +15,41 @@ interface DashboardState {
   start: Date,
   end: Date
   focusedPlot: number | null
+  loading: boolean
 }
 
 export default class Dashboard extends Component<DashboardProps,DashboardState> {
   constructor(props: DashboardProps) {
     super(props)
     this.state = {
-      start: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 7),
+      start: new Date(new Date().getTime() - 1000 * 60 * 60 * 24),
       end: new Date(),
       focusedPlot: null,
+      loading: false
     }
   }
 
-  componentDidMount() {
-    this.reloadWeather()  
+  async componentDidMount() {
+    this.setState({
+      loading: true
+    })
+    const weather = await Weather.load(this.state.start, this.state.end)
+    this.setState({
+      weather,
+      loading: false
+    })
   }
 
-  async reloadWeather() {
+  async updateDateRange(start: Date, end: Date) {
     this.setState({
-      weather: await Weather.load(this.state.start, this.state.end)
+      loading: true,
+      start,
+      end,
+    })
+    const weather = await Weather.load(start, end)
+    this.setState({
+      weather,
+      loading: false
     })
   }
 
@@ -74,8 +90,12 @@ export default class Dashboard extends Component<DashboardProps,DashboardState> 
         <Header
           showBack={this.state.focusedPlot !== null}
           backSelected={() => this.setState({focusedPlot: null})}
+          start={this.state.start}
+          end={this.state.end}
+          datesChange={(start: Date, end: Date) => this.updateDateRange(start, end)}
         />
         { this.state.focusedPlot !== null ? plots[this.state.focusedPlot] : (<div className='Dashboard-grid'>{plots}</div>) }
+        { this.state.loading && (<div className='Dashboard-loading'>Loading ...</div>) }
       </Container>
     )
   }

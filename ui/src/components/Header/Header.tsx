@@ -1,10 +1,14 @@
 import React from "react"
-import { Navbar, Button, NavbarBrand, Nav, NavItem } from 'reactstrap'
+import DatePicker from '../DatePicker/DatePicker'
+import { Navbar, Button, NavbarBrand, Nav, NavItem, Form, FormGroup, Label, Input } from 'reactstrap'
 import './Header.css'
 
 interface HeaderProps {
   showBack: boolean
   backSelected(): void
+  start: Date
+  end: Date
+  datesChange(start: Date, end: Date): void
 }
 
 const Header = (props: HeaderProps) => {
@@ -28,6 +32,10 @@ const Header = (props: HeaderProps) => {
           </NavItem>
         ) }
       </Nav>
+      <div className='Header-form'>
+        <DatePicker date={props.start} dateChanged={d => props.datesChange(d, props.end)} />
+        <DatePicker date={props.end} dateChanged={d => props.datesChange(props.start, d)} />
+      </div>
     </Navbar>
   )
 }

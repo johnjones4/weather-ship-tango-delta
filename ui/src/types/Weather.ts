@@ -62,6 +62,8 @@ export class Weather {
                 return w.relativeHumidity
               case WeatherFeature.pressure:
                 return w.pressure
+              default:
+                return 0
             }
           })
         }

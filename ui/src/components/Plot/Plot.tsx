@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import Plottable from "../../types/Plottable"
+import './Plot.css'
 
 ChartJS.register(
   CategoryScale,
@@ -57,9 +58,9 @@ const axisDefault = {
 
 const Plot = (props: PlotProps) => {
   return (
-    <Card>
+    <Card className='Plot'>
       <CardHeader>
-        {props.title}
+        <div className='Plot-name'>{props.title}</div>
         <Button onClick={() => props.onSelect()} size='sm' className='float-end'>Detail</Button>
       </CardHeader>
       <CardBody>
