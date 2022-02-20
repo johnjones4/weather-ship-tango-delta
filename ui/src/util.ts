@@ -1,5 +1,5 @@
 
-export const formatDate = (d: Date): string => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+export const formatDate = (d: Date): string => `${d.getFullYear()}-${padZeros(d.getMonth() + 1)}-${padZeros(d.getDate())}`
 
 export const parseDate = (ds: string, hour: number, minute: number): Date => {
   const parts = ds.split('-').map(s => parseInt(s))
@@ -15,4 +15,11 @@ export const updateDateHour = (d: Date, h: number): Date => {
 
 export const updateDateMinute = (d: Date, m: number): Date => {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), m, d.getSeconds())
+}
+
+const padZeros = (v: number): string => {
+  if (v < 10) {
+    return `0${v}`
+  }
+  return `${v}`
 }
