@@ -51,6 +51,13 @@ func insertNewWeather(w http.ResponseWriter, req *http.Request) {
 		errorResponse(w, err)
 		return
 	}
+
+	err = publishWeather(weather)
+	if err != nil {
+		errorResponse(w, err)
+		return
+	}
+
 	jsonResponse(w, weather)
 }
 
