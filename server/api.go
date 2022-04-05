@@ -102,6 +102,15 @@ func getWeather(w http.ResponseWriter, req *http.Request) {
 	jsonResponse(w, weather)
 }
 
+func getLatestWeather(w http.ResponseWriter, req *http.Request) {
+	weather, err := getLastHourWeather()
+	if err != nil {
+		errorResponse(w, err)
+		return
+	}
+	jsonResponse(w, weather)
+}
+
 func runHttpServer() {
 	mux := mux.NewRouter()
 
@@ -109,6 +118,7 @@ func runHttpServer() {
 	mux.HandleFunc("/api/info", getInfo).Methods("GET")
 	mux.HandleFunc("/api/weather", insertNewWeather).Methods("POST")
 	mux.HandleFunc("/api/weather", getWeather).Methods("GET")
+	mux.HandleFunc("/api/weather/latest", getLatestWeather).Methods("GET")
 
 	var handler http.Handler = mux
 	handler = logRequestHandler(handler)

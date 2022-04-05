@@ -43,6 +43,25 @@ func getWeatherInRange(start time.Time, end time.Time) ([]Weather, error) {
 	return output, nil
 }
 
+func getLastHourWeather() (Weather, error) {
+	date := time.Now().Add(-time.Hour)
+	ctx, cancel := timeoutContext()
+	defer cancel()
+	rows, err := pool.Query(ctx, "SELECT timestamp, uptime, avg_wind_speed, min_wind_speed, max_wind_speed, temperature, gas, relative_humidity, pressure FROM weather WHERE timestamp >= $1 ORDER BY timestamp desc", date)
+	if err != nil {
+		return Weather{}, err
+	}
+	defer rows.Close()
+	var w Weather
+	if rows.Next() {
+		err = rows.Scan(&w.Timestamp, &w.Uptime, &w.AvgWindSpeed, &w.MinWindSpeed, &w.MaxWindSpeed, &w.Temperature, &w.Gas, &w.RelativeHumidity, &w.Pressure)
+		if err != nil {
+			return Weather{}, err
+		}
+	}
+	return w, nil
+}
+
 func insertWeatherData(weather Weather) error {
 	ctx, cancel := timeoutContext()
 	defer cancel()
