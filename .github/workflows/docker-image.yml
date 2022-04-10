@@ -14,9 +14,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Login
-      run: docker login -u johnjones4 -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
-    - name: Build
-      run: cd server && docker build . --file Dockerfile --tag ghcr.io/${{ github.repository }}
-    - name: Push
-      run: docker push ghcr.io/${{ github.repository }}:latest
+    - uses: uraimo/run-on-arch-action@v2.1.1
+      name: Run commands
+      with:
+        arch: aarch64
+        distro: ubuntu20.04
+        run: |
+          docker login -u johnjones4 -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
+          cd server && docker build . --file Dockerfile --tag ghcr.io/${{ github.repository }}
+          docker push ghcr.io/${{ github.repository }}:latest
