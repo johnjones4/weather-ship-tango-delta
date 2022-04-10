@@ -1,0 +1,22 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login
+      run: docker login -u johnjones4 -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
+    - name: Build
+      run: cd server && docker build . --file Dockerfile --tag ghcr.io/${{GITHUB_REPOSITORY}}
+    - name: Push
+      run: docker push ghcr.io/${{GITHUB_REPOSITORY}}:latest
