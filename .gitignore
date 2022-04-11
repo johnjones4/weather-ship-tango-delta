@@ -140,3 +140,4 @@ __pycache__
 secrets.h
 .DS_Store
 *.ttf
+ui.tar.gz
