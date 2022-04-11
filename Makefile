@@ -1,6 +1,8 @@
-PROJECT=$(shell basename $(shell pwd) | awk '{print tolower($0)}')
+PROJECT=$(shell basename $(shell pwd))
 TAG=ghcr.io/johnjones4/${PROJECT}
 VERSION=$(shell date +%s)
+
+.PHONY: ui
 
 info:
 	echo ${PROJECT} ${VERSION}
@@ -12,10 +14,10 @@ container:
 
 ui:
 	cd ui && npm install
-	cd ui && npm build
+	cd ui && npm run build
 	tar zcvf ui.tar.gz ./ui/build
 	git tag ${VERSION}
 	git push origin ${VERSION}
-	gh release create ${VERSION} ui.tar.gz
+	gh release create ${VERSION} ui.tar.gz --generate-notes
 
 ci: container ui
